@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Topic {
+  id           String      @id @default(cuid())
+  keyword      String
+  sources      String      @default("[\"google\",\"naver\",\"youtube\"]")
+  isScheduled  Boolean     @default(false)
+  scheduleTime String      @default("07:00")
+  isActive     Boolean     @default(true)
+  lastRunAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  searchRuns   SearchRun[]
+  reports      Report[]
+}
+
+model SearchRun {
+  id           String    @id @default(cuid())
+  topicId      String
+  status       String    @default("pending")
+  triggeredBy  String    @default("manual")
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  crawledCount Int       @default(0)
+  errorLog     String?
+
+  topic        Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  report       Report?
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  topicId      String
+  searchRunId  String   @unique
+  title        String
+  summary      String
+  content      String
+  sources      String
+  isEmailed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  topic        Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  searchRun    SearchRun @relation(fields: [searchRunId], references: [id], onDelete: Cascade)
+}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ArrowLeft, Mail, ExternalLink, CheckCircle } from "lucide-react";
 
 interface Report {
@@ -108,16 +109,34 @@ export default function ReportPage() {
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
             <p className="text-blue-800 font-medium">{report.summary}</p>
           </div>
-          <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{report.content}</ReactMarkdown>
+          <div className="prose prose-sm max-w-none prose-headings:mt-8 prose-headings:mb-3 prose-h2:text-lg prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-h3:text-base prose-p:mb-4 prose-p:leading-relaxed prose-blockquote:bg-amber-50 prose-blockquote:border-amber-300 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:my-4 prose-ul:my-3 prose-li:my-1">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({ href, children }) => (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-blue-600 hover:underline no-underline">
+                    {children}
+                    <svg className="w-3 h-3 inline shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                  </a>
+                ),
+                p: ({ children, ...props }) => {
+                  const text = typeof children === "string" ? children : Array.isArray(children) ? children.map(c => typeof c === "string" ? c : "").join("") : "";
+                  const isSource = text.includes("📎") || text.includes("출처:");
+                  if (isSource) {
+                    return <p className="text-emerald-700 text-xs mt-2 mb-6 pl-3 border-l-2 border-emerald-300" {...props}>{children}</p>;
+                  }
+                  return <p {...props}>{children}</p>;
+                },
+              }}
+            >{report.content}</ReactMarkdown>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <h2 className="text-sm font-semibold text-gray-500 mb-3">
-            출처 ({report.sources.length}건)
-          </h2>
-          <ul className="space-y-2">
+        <details className="bg-white rounded-xl shadow-sm border">
+          <summary className="px-6 py-4 cursor-pointer text-sm font-semibold text-gray-500 hover:text-gray-700">
+            전체 참고 출처 ({report.sources.length}건) — 클릭하여 펼치기
+          </summary>
+          <ul className="px-6 pb-4 space-y-2">
             {report.sources.map((source, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span
@@ -137,7 +156,7 @@ export default function ReportPage() {
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       </main>
     </div>
   );

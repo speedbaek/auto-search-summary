@@ -11,7 +11,7 @@ export interface CrawledContent {
   error?: string;
 }
 
-const MAX_TEXT_LENGTH = 3000;
+const MAX_TEXT_LENGTH = 8000;
 const CRAWL_TIMEOUT = 10000;
 const CONCURRENCY = 5;
 

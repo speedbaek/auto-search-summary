@@ -9,8 +9,9 @@ export interface SummaryResult {
   sources: { title: string; url: string; platform: string }[];
 }
 
-const MAX_TOTAL_INPUT = 10000;
-const MAX_PER_CONTENT = 2000;
+const MAX_TOTAL_INPUT = 40000;
+const MAX_PER_CONTENT = 6000;
+const MAX_TEXT_LENGTH = 8000;
 
 function prepareContents(contents: CrawledContent[]): string {
   const successful = contents.filter((c) => c.text.length > 0);
@@ -28,35 +29,67 @@ function prepareContents(contents: CrawledContent[]): string {
     .join("\n\n---\n\n");
 }
 
-const MAX_TEXT_LENGTH = 3000;
-
 export async function summarize(
   keyword: string,
   contents: CrawledContent[]
 ): Promise<SummaryResult> {
   const preparedText = prepareContents(contents);
 
-  const prompt = `당신은 정보 큐레이션 전문가입니다.
-아래 검색 결과들을 분석하여 "${keyword}"에 대한 오늘의 브리핑을 작성해주세요.
+  const prompt = `당신은 해당 분야 전문 리서처이자 교육 콘텐츠 작성자입니다.
+아래 검색 결과들을 심층 분석하여 "${keyword}"에 대한 **학습용 정리 자료**를 작성해주세요.
+
+## 작성 목표
+- 이 자료만 읽으면 "${keyword}"의 현재 트렌드, 핵심 개념, 실무 적용 방법까지 파악할 수 있어야 합니다.
+- 단순 요약이 아닌, **내용을 깊이 있게 설명**하고 구체적 사례와 데이터를 포함하세요.
+- 각 섹션 끝에 해당 내용의 출처 링크를 **인라인**으로 표기하세요.
 
 ## 작성 규칙
-1. **제목**: "${keyword}" 관련 오늘의 브리핑 제목 (한 줄)
-2. **한줄 요약**: 오늘의 핵심을 한 문장으로
-3. **주요 내용**: 3~5개 핵심 포인트를 각각 2~3문장으로 설명
-4. **인사이트**: CEO 관점에서 주목할 점이나 시사점 1~2개
-5. **출처**: 각 내용의 출처를 [제목](URL) 형식으로 표기
+
+### 1. 제목
+"${keyword}" 관련 학습 자료 제목 (한 줄, 흥미를 끄는 표현)
+
+### 2. 한줄 요약
+오늘의 핵심을 한 문장으로 (구체적 수치나 키워드 포함)
+
+### 3. 핵심 개요 (Overview)
+- "${keyword}"가 왜 지금 중요한지, 전체 맥락을 3~4문장으로 설명
+
+### 4. 주요 내용 (5~8개 섹션)
+각 섹션은 반드시 다음을 포함:
+- **소제목**: 핵심 포인트를 명확히 드러내는 제목
+- **본문**: 5~8문장으로 상세하게 설명. 구체적 사례, 수치, 도구명, 기업명 등을 적극 포함
+- **핵심 포인트**: 해당 섹션에서 기억할 1~2가지를 "> 💡" 인용 블록으로 정리
+- **출처**: 해당 내용이 나온 원문 링크를 "📎 출처: [제목](URL)" 형식으로 섹션 바로 아래에 표기
+
+### 5. 실무 적용 가이드
+- 이 내용을 실무에 어떻게 적용할 수 있는지 3~5개 구체적 액션 아이템
+- 가능하면 단계별 접근법 포함
+
+### 6. 용어 정리
+- 본문에 등장한 전문 용어 3~5개를 간단히 설명
+
+### 7. 더 알아보기
+- 본문에서 다루지 못한 관련 주제 2~3개를 짧게 언급
 
 ## 톤
-- 바쁜 경영자가 2분 안에 읽을 수 있는 분량
-- 핵심만 간결하게, 불필요한 수식어 제거
-- 한국어로 작성
+- 학습자가 이 자료로 공부할 수 있는 교재 수준의 상세함
+- 핵심 내용은 굵게(**bold**) 처리하여 스캔 가능하게
+- 한국어로 작성, 전문 용어는 영문 병기
+
+## 분량
+- 최소 3000자 이상의 충실한 내용 (단, 불필요한 반복은 제외)
+
+## 출처 표기 방식 (매우 중요)
+- 각 섹션의 내용이 끝난 직후, 해당 내용의 출처를 "📎 출처: [제목](URL)" 형식으로 바로 표기
+- 하나의 섹션에 여러 출처가 있으면 여러 줄로 표기
+- 마지막에 출처를 모아두지 마세요. 반드시 인라인으로!
 
 ## 응답 형식
 반드시 아래 JSON 형식으로만 응답하세요:
 {
-  "title": "브리핑 제목",
+  "title": "학습 자료 제목",
   "summary": "한줄 요약",
-  "content": "## 주요 내용\\n\\n### 1. ...\\n\\n..."
+  "content": "## 핵심 개요\\n\\n...\\n\\n## 주요 내용\\n\\n### 1. ...\\n\\n...\\n\\n📎 출처: [제목](URL)\\n\\n### 2. ...\\n\\n..."
 }
 
 ## 수집된 콘텐츠
@@ -75,7 +108,7 @@ ${preparedText}`;
   const { text } = await generateText({
     model: anthropic("claude-sonnet-4-20250514"),
     prompt,
-    maxOutputTokens: 2000,
+    maxOutputTokens: 8000,
   });
 
   // Parse JSON response
@@ -95,7 +128,7 @@ ${preparedText}`;
     }));
 
   return {
-    title: parsed.title || `${keyword} 브리핑`,
+    title: parsed.title || `${keyword} 학습 자료`,
     summary: parsed.summary || "",
     content: parsed.content || text,
     sources,

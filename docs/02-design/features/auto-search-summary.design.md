@@ -72,14 +72,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"              // 로컬 개발: SQLite, 배포: PostgreSQL 전환 가능
+  url      = env("DATABASE_URL")   // SQLite: "file:./dev.db"
 }
 
 model Topic {
   id           String      @id @default(cuid())
   keyword      String                              // 검색어
-  sources      String[]    @default(["google", "naver", "youtube"])
+  sources      String      @default("[\"google\",\"naver\",\"youtube\"]") // JSON string (SQLite 호환)
   isScheduled  Boolean     @default(false)
   scheduleTime String      @default("07:00")       // HH:MM
   isActive     Boolean     @default(true)
@@ -99,7 +99,7 @@ model SearchRun {
   startedAt    DateTime    @default(now())
   completedAt  DateTime?
   crawledCount Int         @default(0)
-  errorLog     Json?
+  errorLog     String?                                 // JSON string (SQLite 호환)
 
   topic        Topic       @relation(fields: [topicId], references: [id], onDelete: Cascade)
   report       Report?
@@ -112,7 +112,7 @@ model Report {
   title        String                              // AI 생성 제목
   summary      String                              // 한줄 요약
   content      String                              // Markdown 요약 본문
-  sources      Json                                // [{ title, url, platform }]
+  sources      String                              // JSON string: [{ title, url, platform }]
   isEmailed    Boolean     @default(false)
   createdAt    DateTime    @default(now())
 

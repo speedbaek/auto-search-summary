@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Loader2, Play, FileText, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Play, FileText, Trash2, Settings } from "lucide-react";
 import type { Topic, Report } from "@prisma/client";
+import { SearchProgress } from "./search-progress";
 
 interface TopicCardProps {
   topic: Topic;
@@ -11,35 +12,40 @@ interface TopicCardProps {
   onDelete?: () => void;
 }
 
-type SearchStatus = "idle" | "searching" | "crawling" | "summarizing" | "completed" | "failed";
-
 export function TopicCard({ topic, latestReport, onDelete }: TopicCardProps) {
-  const [status, setStatus] = useState<SearchStatus>("idle");
+  const [searchRunId, setSearchRunId] = useState<string | null>(null);
   const [resultReportId, setResultReportId] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   const handleRun = async () => {
-    setStatus("searching");
+    setFailed(false);
+    setResultReportId(null);
     try {
       const res = await fetch("/api/search/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topicId: topic.id }),
       });
-      if (res.ok) {
+      if (res.ok || res.status === 202) {
         const data = await res.json();
-        if (data.status === "completed" && data.reportId) {
-          setStatus("completed");
-          setResultReportId(data.reportId);
-        } else {
-          setStatus("failed");
-        }
+        setSearchRunId(data.searchRunId);
       } else {
-        setStatus("failed");
+        setFailed(true);
       }
     } catch {
-      setStatus("failed");
+      setFailed(true);
     }
   };
+
+  const handleComplete = useCallback((reportId: string) => {
+    setResultReportId(reportId);
+    setSearchRunId(null);
+  }, []);
+
+  const handleFailed = useCallback(() => {
+    setFailed(true);
+    setSearchRunId(null);
+  }, []);
 
   const handleDelete = async () => {
     if (!confirm(`"${topic.keyword}" 토픽을 삭제하시겠습니까?`)) return;
@@ -56,16 +62,7 @@ export function TopicCard({ topic, latestReport, onDelete }: TopicCardProps) {
       })
     : "실행 기록 없음";
 
-  const statusLabels: Record<SearchStatus, string> = {
-    idle: "",
-    searching: "검색 중...",
-    crawling: "크롤링 중...",
-    summarizing: "AI 요약 중...",
-    completed: "완료!",
-    failed: "실패",
-  };
-
-  const isRunning = !["idle", "completed", "failed"].includes(status);
+  const isRunning = !!searchRunId;
   const reportId = resultReportId || latestReport?.id;
 
   return (
@@ -77,37 +74,51 @@ export function TopicCard({ topic, latestReport, onDelete }: TopicCardProps) {
             마지막 실행: {lastRun} | 스케줄:{" "}
             {topic.isScheduled ? `ON (${topic.scheduleTime})` : "OFF"}
           </p>
-          {status !== "idle" && (
-            <div className={`mt-2 flex items-center gap-1.5 text-sm ${status === "failed" ? "text-red-600" : status === "completed" ? "text-green-600" : "text-blue-600"}`}>
-              {isRunning && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {statusLabels[status]}
-            </div>
-          )}
-          {status === "idle" && latestReport && (
+          {!isRunning && !failed && latestReport && (
             <p className="mt-2 text-sm text-gray-600 line-clamp-2">
               ▸ {latestReport.summary}
             </p>
           )}
         </div>
-        <button
-          onClick={handleDelete}
-          className="text-gray-400 hover:text-red-500 p-1"
-          title="삭제"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="flex gap-1">
+          <Link
+            href={`/topics/${topic.id}`}
+            className="text-gray-400 hover:text-blue-500 p-1"
+            title="수정"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={handleDelete}
+            className="text-gray-400 hover:text-red-500 p-1"
+            title="삭제"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
+
+      {searchRunId && (
+        <div className="mt-3">
+          <SearchProgress
+            searchRunId={searchRunId}
+            onComplete={handleComplete}
+            onFailed={handleFailed}
+          />
+        </div>
+      )}
+
+      {failed && (
+        <p className="mt-2 text-sm text-red-600">검색에 실패했습니다. 다시 시도해주세요.</p>
+      )}
+
       <div className="mt-3 flex gap-2">
         <button
           onClick={handleRun}
           disabled={isRunning}
           className="flex items-center gap-1 rounded bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50"
         >
-          {isRunning ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Play className="w-3.5 h-3.5" />
-          )}
+          <Play className="w-3.5 h-3.5" />
           {isRunning ? "실행 중" : "실행"}
         </button>
         {reportId && (

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user) return NextResponse.json({ error: "UNAUTHORIZED", message: "로그인이 필요합니다" }, { status: 401 });
 
   const topics = await prisma.topic.findMany({
     orderBy: { createdAt: "desc" },
@@ -17,13 +17,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user) return NextResponse.json({ error: "UNAUTHORIZED", message: "로그인이 필요합니다" }, { status: 401 });
 
   const body = await req.json();
   const { keyword, sources, isScheduled, scheduleTime } = body;
 
   if (!keyword?.trim()) {
-    return NextResponse.json({ error: "검색어를 입력해주세요" }, { status: 400 });
+    return NextResponse.json({ error: "INVALID_INPUT", message: "검색어를 입력해주세요" }, { status: 400 });
   }
 
   const topic = await prisma.topic.create({

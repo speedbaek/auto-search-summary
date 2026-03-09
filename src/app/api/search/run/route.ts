@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { executeSearch } from "@/features/scheduler";
 
 export async function POST(request: Request) {
@@ -21,13 +22,27 @@ export async function POST(request: Request) {
     );
   }
 
-  // Start search asynchronously - don't await
-  // Return immediately with the run info
-  const resultPromise = executeSearch(topicId);
+  const topic = await prisma.topic.findUnique({ where: { id: topicId } });
+  if (!topic) {
+    return NextResponse.json(
+      { error: "NOT_FOUND", message: "토픽을 찾을 수 없습니다" },
+      { status: 404 }
+    );
+  }
 
-  // We can't truly fire-and-forget in Edge/Serverless easily,
-  // so we await but return quickly with a polling endpoint
-  const result = await resultPromise;
+  // Create search run record first
+  const searchRun = await prisma.searchRun.create({
+    data: { topicId, status: "searching" },
+  });
 
-  return NextResponse.json(result, { status: 200 });
+  // Fire and forget - execute in background
+  executeSearch(topicId, searchRun.id).catch((err) => {
+    console.error("[SearchRun] Background execution failed:", err);
+  });
+
+  // Return immediately with 202 Accepted
+  return NextResponse.json(
+    { searchRunId: searchRun.id, status: "searching" },
+    { status: 202 }
+  );
 }

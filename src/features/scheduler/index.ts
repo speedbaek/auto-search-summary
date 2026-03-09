@@ -12,14 +12,14 @@ interface RunResult {
   error?: string;
 }
 
-export async function executeSearch(topicId: string): Promise<RunResult> {
+export async function executeSearch(topicId: string, existingRunId?: string): Promise<RunResult> {
   const topic = await prisma.topic.findUnique({ where: { id: topicId } });
   if (!topic) throw new Error("Topic not found");
 
-  // Create search run record
-  const searchRun = await prisma.searchRun.create({
-    data: { topicId, status: "searching" },
-  });
+  // Use existing run or create new one
+  const searchRun = existingRunId
+    ? await prisma.searchRun.findUniqueOrThrow({ where: { id: existingRunId } })
+    : await prisma.searchRun.create({ data: { topicId, status: "searching" } });
 
   try {
     // Step 1: Search

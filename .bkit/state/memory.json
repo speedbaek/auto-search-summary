@@ -1,0 +1,33 @@
+{
+  "sessionCount": 1,
+  "lastSession": {
+    "startedAt": "2026-03-06T06:24:16.680Z",
+    "platform": "claude",
+    "level": "Dynamic"
+  },
+  "pdca": {
+    "currentFeature": "auto-search-summary",
+    "phase": "design",
+    "startedAt": "2026-03-06",
+    "history": [
+      {
+        "phase": "plan",
+        "action": "created",
+        "timestamp": "2026-03-06",
+        "document": "docs/01-plan/features/auto-search-summary.plan.md"
+      },
+      {
+        "phase": "plan",
+        "action": "updated-v0.2",
+        "timestamp": "2026-03-06",
+        "document": "docs/01-plan/features/auto-search-summary.plan.md"
+      },
+      {
+        "phase": "design",
+        "action": "created",
+        "timestamp": "2026-03-06",
+        "document": "docs/02-design/features/auto-search-summary.design.md"
+      }
+    ]
+  }
+}

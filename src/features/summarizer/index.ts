@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { CrawledContent } from "../crawler";
 
 export interface SummaryResult {
@@ -61,6 +61,16 @@ export async function summarize(
 
 ## 수집된 콘텐츠
 ${preparedText}`;
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY is not set");
+  }
+
+  const anthropic = createAnthropic({
+    apiKey,
+    baseURL: "https://api.anthropic.com/v1",
+  });
 
   const { text } = await generateText({
     model: anthropic("claude-sonnet-4-20250514"),

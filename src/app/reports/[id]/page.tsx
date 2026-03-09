@@ -109,7 +109,7 @@ export default function ReportPage() {
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
             <p className="text-blue-800 font-medium">{report.summary}</p>
           </div>
-          <div className="prose prose-sm max-w-none prose-headings:mt-8 prose-headings:mb-3 prose-h2:text-lg prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-h3:text-base prose-p:mb-4 prose-p:leading-relaxed prose-blockquote:bg-amber-50 prose-blockquote:border-amber-300 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:my-4 prose-ul:my-3 prose-li:my-1">
+          <div className="prose prose-sm max-w-none prose-headings:mt-10 prose-headings:mb-4 prose-h2:text-lg prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-h3:text-base prose-p:mb-5 prose-p:leading-7 prose-blockquote:bg-amber-50 prose-blockquote:border-amber-300 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:my-4 prose-ul:my-3 prose-li:my-1">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{

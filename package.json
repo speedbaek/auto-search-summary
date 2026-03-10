@@ -19,6 +19,7 @@
     "@types/node": "^25.3.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vercel/functions": "^3.4.3",
     "ai": "^6.0.116",
     "autoprefixer": "^10.4.27",
     "cheerio": "^1.2.0",

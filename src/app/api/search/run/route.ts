@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { executeSearch } from "@/features/scheduler";
+
+// Vercel Hobby: max 60s, Pro: max 300s
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -35,10 +39,13 @@ export async function POST(request: Request) {
     data: { topicId, status: "searching" },
   });
 
-  // Fire and forget - execute in background
-  executeSearch(topicId, searchRun.id).catch((err) => {
-    console.error("[SearchRun] Background execution failed:", err);
-  });
+  // Use waitUntil to keep the serverless function alive after sending the response
+  // This prevents Vercel from killing the background task
+  waitUntil(
+    executeSearch(topicId, searchRun.id).catch((err) => {
+      console.error("[SearchRun] Background execution failed:", err);
+    })
+  );
 
   // Return immediately with 202 Accepted
   return NextResponse.json(

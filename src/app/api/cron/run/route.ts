@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { runScheduledTopics } from "@/features/scheduler";
 
+// Vercel Hobby: max 60s
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get("authorization");

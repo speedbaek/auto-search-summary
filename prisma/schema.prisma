@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Account {
@@ -13,12 +14,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -75,7 +76,7 @@ model SearchRun {
   startedAt    DateTime  @default(now())
   completedAt  DateTime?
   crawledCount Int       @default(0)
-  errorLog     String?
+  errorLog     String?   @db.Text
 
   topic        Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   report       Report?
@@ -86,9 +87,9 @@ model Report {
   topicId      String
   searchRunId  String   @unique
   title        String
-  summary      String
-  content      String
-  sources      String
+  summary      String   @db.Text
+  content      String   @db.Text
+  sources      String   @db.Text
   isEmailed    Boolean  @default(false)
   createdAt    DateTime @default(now())
 

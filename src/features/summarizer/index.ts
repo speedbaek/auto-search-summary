@@ -9,9 +9,9 @@ export interface SummaryResult {
   sources: { title: string; url: string; platform: string }[];
 }
 
-const MAX_TOTAL_INPUT = 40000;
-const MAX_PER_CONTENT = 6000;
-const MAX_TEXT_LENGTH = 8000;
+const MAX_TOTAL_INPUT = 20000;
+const MAX_PER_CONTENT = 3000;
+const MAX_TEXT_LENGTH = 4000;
 
 function prepareContents(contents: CrawledContent[]): string {
   const successful = contents.filter((c) => c.text.length > 0);
@@ -123,9 +123,9 @@ ${preparedText}`;
   });
 
   const { text } = await generateText({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: anthropic("claude-3-5-haiku-20241022"),
     prompt,
-    maxOutputTokens: 8000,
+    maxOutputTokens: 4000,
   });
 
   // Parse JSON response

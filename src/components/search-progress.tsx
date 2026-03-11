@@ -17,12 +17,24 @@ const steps: { status: Status; label: string; icon: typeof Search }[] = [
   { status: "summarizing", label: "AI 요약 중", icon: Brain },
 ];
 
+const POLLING_TIMEOUT_MS = 90000; // 90 seconds max polling time
+
 export function SearchProgress({ searchRunId, onComplete, onFailed }: SearchProgressProps) {
   const [currentStatus, setCurrentStatus] = useState<Status>("searching");
   const [crawledCount, setCrawledCount] = useState(0);
 
   useEffect(() => {
+    const startTime = Date.now();
+
     const interval = setInterval(async () => {
+      // Client-side timeout: if polling exceeds 90s, treat as failed
+      if (Date.now() - startTime > POLLING_TIMEOUT_MS) {
+        clearInterval(interval);
+        setCurrentStatus("failed");
+        onFailed();
+        return;
+      }
+
       try {
         const res = await fetch(`/api/search/status/${searchRunId}`);
         if (!res.ok) return;

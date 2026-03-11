@@ -117,13 +117,12 @@ ${preparedText}`;
     throw new Error("ANTHROPIC_API_KEY is not set");
   }
 
-  const anthropic = createAnthropic({
-    apiKey,
-    baseURL: "https://api.anthropic.com/v1",
-  });
+  const anthropic = createAnthropic({ apiKey });
+
+  console.log("[Summarizer] Calling Claude API with model: claude-haiku-4-5-20250414");
 
   const { text } = await generateText({
-    model: anthropic("claude-3-5-haiku-20241022"),
+    model: anthropic("claude-haiku-4-5-20250414"),
     prompt,
     maxOutputTokens: 4000,
   });

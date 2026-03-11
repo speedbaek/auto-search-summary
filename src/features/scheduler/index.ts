@@ -87,13 +87,15 @@ export async function executeSearch(topicId: string, existingRunId?: string): Pr
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    const errorDetails = err instanceof Error ? err.stack : JSON.stringify(err);
+    console.error("[Scheduler] Search failed:", errorMessage, "\nDetails:", errorDetails);
 
     await prisma.searchRun.update({
       where: { id: searchRun.id },
       data: {
         status: "failed",
         completedAt: new Date(),
-        errorLog: JSON.stringify({ error: errorMessage }),
+        errorLog: JSON.stringify({ error: errorMessage, details: errorDetails?.slice(0, 500) }),
       },
     });
 

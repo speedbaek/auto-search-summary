@@ -41,5 +41,17 @@ export async function searchAll(
     }
   }
 
+  // Auto-fallback: if all configured sources returned empty (e.g. missing API keys),
+  // always try DuckDuckGo as a last resort
+  if (allResults.length === 0 && !sources.includes("google")) {
+    console.log("[SearchEngine] All sources returned empty, falling back to DuckDuckGo");
+    try {
+      const fallbackResults = await searchDuckDuckGo(keyword);
+      allResults.push(...fallbackResults);
+    } catch (err) {
+      console.error("[SearchEngine] DuckDuckGo fallback also failed:", err);
+    }
+  }
+
   return allResults;
 }

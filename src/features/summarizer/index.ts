@@ -119,12 +119,12 @@ ${preparedText}`;
 
   const anthropic = createAnthropic({ apiKey });
 
-  console.log("[Summarizer] Calling Claude API with model: claude-haiku-4-5-20250414");
+  console.log("[Summarizer] Calling Claude API with model: claude-sonnet-4-20250514");
 
   const { text } = await generateText({
-    model: anthropic("claude-haiku-4-5-20250414"),
+    model: anthropic("claude-sonnet-4-20250514"),
     prompt,
-    maxOutputTokens: 4000,
+    maxOutputTokens: 3000,
   });
 
   // Parse JSON response

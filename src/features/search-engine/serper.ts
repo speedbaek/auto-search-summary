@@ -39,7 +39,6 @@ export async function searchSerper(
       gl: "kr",
       hl: "ko",
       num,
-      tbs: "qdr:m",
     }),
     signal: AbortSignal.timeout(15000),
   });

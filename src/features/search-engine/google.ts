@@ -9,7 +9,7 @@ export async function searchGoogle(keyword: string): Promise<SearchResult[]> {
     return [];
   }
 
-  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(keyword)}&num=5&lr=lang_ko`;
+  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(keyword)}&num=10&lr=lang_ko&dateRestrict=m1&sort=date`;
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
 

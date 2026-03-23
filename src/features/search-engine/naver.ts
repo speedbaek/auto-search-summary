@@ -20,7 +20,7 @@ async function searchNaverApi(
     return [];
   }
 
-  const url = `https://openapi.naver.com/v1/search/${type}.json?query=${encodeURIComponent(keyword)}&display=5&sort=date`;
+  const url = `https://openapi.naver.com/v1/search/${type}.json?query=${encodeURIComponent(keyword)}&display=10&sort=date`;
 
   const res = await fetch(url, {
     headers: {

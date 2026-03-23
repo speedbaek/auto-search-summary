@@ -17,7 +17,9 @@ export async function searchYoutube(keyword: string): Promise<SearchResult[]> {
     return [];
   }
 
-  const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=${encodeURIComponent(keyword)}&part=snippet&type=video&maxResults=5&relevanceLanguage=ko&order=date`;
+  const now = new Date();
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString();
+  const url = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=${encodeURIComponent(keyword)}&part=snippet&type=video&maxResults=10&relevanceLanguage=ko&order=date&publishedAfter=${oneMonthAgo}`;
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
 

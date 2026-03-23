@@ -11,7 +11,10 @@ interface SerperResponse {
   organic: SerperOrganicResult[];
 }
 
-export async function searchSerper(keyword: string): Promise<SearchResult[]> {
+export async function searchSerper(
+  keyword: string,
+  options?: { site?: string; platform?: SearchResult["platform"]; num?: number }
+): Promise<SearchResult[]> {
   const apiKey = process.env.SERPER_API_KEY;
 
   if (!apiKey) {
@@ -19,7 +22,11 @@ export async function searchSerper(keyword: string): Promise<SearchResult[]> {
     return [];
   }
 
-  console.log(`[Serper] Searching for: "${keyword}"`);
+  const query = options?.site ? `${keyword} site:${options.site}` : keyword;
+  const platform = options?.platform || "google";
+  const num = options?.num || 10;
+
+  console.log(`[Serper] Searching for: "${query}" (platform: ${platform})`);
 
   const res = await fetch("https://google.serper.dev/search", {
     method: "POST",
@@ -28,10 +35,11 @@ export async function searchSerper(keyword: string): Promise<SearchResult[]> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      q: keyword,
+      q: query,
       gl: "kr",
       hl: "ko",
-      num: 7,
+      num,
+      tbs: "qdr:m",
     }),
     signal: AbortSignal.timeout(15000),
   });
@@ -44,15 +52,15 @@ export async function searchSerper(keyword: string): Promise<SearchResult[]> {
 
   const data: SerperResponse = await res.json();
 
-  const results: SearchResult[] = (data.organic || []).slice(0, 7).map((item) => ({
+  const results: SearchResult[] = (data.organic || []).slice(0, num).map((item) => ({
     title: item.title,
     url: item.link,
     snippet: item.snippet || "",
-    platform: "google" as const,
+    platform,
     publishedAt: item.date,
   }));
 
-  console.log(`[Serper] Found ${results.length} results`);
+  console.log(`[Serper] Found ${results.length} results for platform: ${platform}`);
 
   return results;
 }
